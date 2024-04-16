@@ -1,0 +1,23 @@
+<!-- templates/fill_blank/questions.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generated Questions</title>
+</head>
+<body>
+    <h1>Generated Questions</h1>
+    <form method="post">
+        {% csrf_token %}
+        {% for question_dict in questions %}
+        <fieldset>
+            <legend>{{ question_dict.question }}</legend>
+            {% for option in question_dict.options %}
+            <input type="checkbox" id="{{ forloop.parentloop.counter }}_{{ forloop.counter }}" name="question{{ forloop.parentloop.counter }}_option{{ forloop.counter }}">
+            <label for="{{ forloop.parentloop.counter }}_{{ forloop.counter }}">{{ option }}</label><br>
+            {% endfor %}
+        </fieldset>
+        {% endfor %}
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>

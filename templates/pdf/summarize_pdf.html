@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding-top: 80px;
+        line-height: 1.6;
+      }
+
+      .container {
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      input[type="range"] {
+        width: 100%;
+      }
+
+      #word-count {
+        margin-top: 20px;
+      }
+
+      input[type="submit"],
+      input[type="button"],
+      button {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+      }
+
+      input[type="submit"]:hover,
+      input[type="button"]:hover,
+      button:hover {
+        background-color: #002c5a;
+      }
+
+      input[type="file"],
+      input[type="range"] {
+        width: 50%;
+        padding: 10px;
+        border: 1px solid #0e2c97;
+        border-radius: 10px;
+        background-color: #ffffff;
+        color: #02264b;
+        margin-bottom: 10px;
+      }
+
+      .range-div {
+        margin-bottom: 10px;
+        text-align: center;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+      }
+
+      .input-div {
+        display: flex;
+        justify-content: center;
+      }
+
+      #word-count {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 30px;
+      }
+
+      #summarize_pdf-form {
+        text-align: center;
+      }
+
+      .pdf-sum {
+        font-family: Manhattan;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #545353;
+      }
+
+      footer {
+        background-color: #032c8b;
+        color: #fff;
+        padding: 20px 0;
+        text-align: center;
+      }
+
+      footer a {
+        color: #fff;
+        text-decoration: none;
+        margin-right: 15px;
+      }
+
+      footer a:hover {
+        text-decoration: underline;
+      }
+
+      .footer-links {
+        margin-bottom: 15px;
+      }
+
+      .navbar {
+        z-index: 1000;
+      }
+
+      .moving-bar {
+        position: fixed;
+        top: 56px;
+        /* Adjust according to your navbar height */
+        left: 0;
+        width: 100%;
+        height: 20px;
+        /* Adjust height of the moving bar */
+        background-color: #007bff;
+        /* Background color of the moving bar */
+        color: white;
+        /* Text color */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        font-weight: bold;
+        animation: moveBar 20s linear infinite;
+        /* Adjust animation properties as needed */
+        overflow: hidden;
+        /* Hide overflowing pseudo-elements */
+      }
+
+      /* Animation for the moving bar */
+      @keyframes moveBar {
+        0% {
+          transform: translateX(-100%);
+        }
+
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      /* Pseudo-elements for rounded ends */
+      .moving-bar::before,
+      .moving-bar::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        width: 100px;
+        /* Adjust the width of the rounded ends */
+        height: 100%;
+        background-color: inherit;
+        border-radius: 50%;
+      }
+
+      .moving-bar::before {
+        left: -50px;
+        /* Adjust the position of the left rounded end */
+      }
+
+      .moving-bar::after {
+        right: -50px;
+        /* Adjust the position of the right rounded end */
+      }
+    </style>
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PDF Summarizer</title>
+    
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+  </head>
+
+  <body>
+    <!-- nav bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+      <div class="container-fluid">
+      <a class="navbar-brand mb-0 h1 text-primary text-uppercase " href="#">Laconic</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a
+                class="nav-link active"
+                aria-current="page"
+                href="{% url 'summarize' %}"
+                >Text Summarizer</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'summarize_pdf' %}"
+                >Pdf Summarizer</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/fill/create">Question Generator</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'logout' %}">LogOut</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="moving-bar">
+      &nbsp;&nbsp;&emsp;No Word Limits &nbsp;&nbsp;&emsp;&nbsp;&nbsp; **
+      &nbsp;&nbsp;&nbsp;&nbsp;&emsp;No Summarization Limits
+      &nbsp;&nbsp;&emsp;&nbsp;&nbsp;&emsp; ** &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3
+      Different Summarys
+    </div>
+
+    <div class="container flex">
+      <div class="row-g-3 row1">
+        <div
+          class="col.col-12.col-sm-12.col-md-12.col-lg-12.col-xl-12.col-xxl-12 text-center"
+        >
+          <h1 class="pdf-sum">PDF Summarizer</h1>
+        </div>
+      </div>
+      <br />
+      <form
+        id="summarize_pdf-form"
+        method="post"
+        action="{% url 'summarize_pdf' %}"
+        enctype="multipart/form-data"
+      >
+        {% csrf_token %}
+        <div class="input-div">
+          <input type="file" id="upload" name="file" accept=".pdf" />
+        </div>
+        <div class="range-div">
+          <label for="max_summary_length_pdf">Summary Length:</label>
+          <input
+            type="range"
+            id="max_summary_length_pdf"
+            name="max_summary_length_pdf"
+            min="4"
+            max="30"
+            value="8"
+          />
+        </div>
+        <input type="submit" value="Summarize" />
+      </form>
+      <div id="word-count"></div>
+      <br />
+      <div class="accordion" id="accordionExample">
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button
+              class="accordion-button"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#collapseOne"
+              aria-expanded="true"
+              aria-controls="collapseOne"
+            >
+              <div id="general-summary-heading"></div>
+            </button>
+          </h2>
+          <div
+            id="collapseOne"
+            class="accordion-collapse collapse show"
+            data-bs-parent="#accordionExample"
+          >
+            <div class="accordion-body">
+              <div id="general-summary"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button
+              class="accordion-button collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#collapseTwo"
+              aria-expanded="false"
+              aria-controls="collapseTwo"
+            >
+              <div id="summary-heading"></div>
+            </button>
+          </h2>
+          <div
+            id="collapseTwo"
+            class="accordion-collapse collapse"
+            data-bs-parent="#accordionExample"
+          >
+            <div class="accordion-body">
+              <div id="summary"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button
+              class="accordion-button collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#collapseThree"
+              aria-expanded="false"
+              aria-controls="collapseThree"
+            >
+              <div id="extractive-summary-heading"></div>
+            </button>
+          </h2>
+          <div
+            id="collapseThree"
+            class="accordion-collapse collapse"
+            data-bs-parent="#accordionExample"
+          >
+            <div class="accordion-body">
+              <div id="extractive-summary"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree"
+            aria-expanded="false" aria-controls="collapseThree">
+            <div id="bert-summary-heading"></div>
+          </button>
+        </h2>
+        <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+          <div class="accordion-body">
+            <div id="bert-summary"></div>
+      
+          </div>
+        </div>
+      </div> -->
+      </div>
+    </div>
+    <footer>
+      <div class="container">
+        <div class="footer-links">
+          <a href="{% url 'summarize_pdf' %}">Pdf Summarizer</a>
+          <a href="{% url 'summarize' %}">Text Summarizer</a>
+          <a href="/fill/generate">Question Generator</a>
+          <a href="{% url 'about' %}">About</a>
+        </div>
+        <div>&copy; 2024 Avanthik</div>
+      </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      $(document).ready(function () {
+        $("#max_summary_length_pdf").on("input", function () {
+          var currentLength = $(this).val();
+          $("#max_summary_display").text(currentLength);
+        });
+
+        $("#summarize_pdf-form").submit(function (e) {
+          e.preventDefault();
+          var formData = new FormData(this);
+          $.ajax({
+            type: "POST",
+            url: "{% url 'summarize_pdf' %}",
+            data: formData,
+            processData: false, // Important! To send FormData object
+            contentType: false, // Important! To send FormData object
+            success: function (data) {
+              $("#summary-heading").html(
+                "<h2>Summary 2</h2>"
+              );
+              $("#summary").text(data.summary);
+
+              $("#general-summary-heading").html("<h2> Summary 1</h2>");
+              $("#general-summary").text(data.general_summary);
+
+              // $("#bert-summary-heading").html("<h2>bert Summary</h2>");
+              // $("#bert-summary").text(data.bert_summary);
+
+              $("#extractive-summary-heading").html(
+                "<h2> Summary 3</h2>"
+              );
+              $("#extractive-summary").text(data.extractive_summary);
+
+              $("#word-count").text("Word Count: " + data.word_count);
+            },
+            error: function (xhr, status, error) {
+              var errorMessage = xhr.responseJSON.error;
+              alert("Error: " + errorMessage);
+            },
+          });
+        });
+      });
+    </script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>
