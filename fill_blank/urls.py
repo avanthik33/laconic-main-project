@@ -1,7 +1,8 @@
 from django.urls import path
-from .views import generate_questions
+from .views import index, generate_mcq
 
 urlpatterns = [
-    path("generate/", generate_questions, name="generate_questions"),
+    path("generate/", index, name="index"),
+    path("mcq/", generate_mcq, name="generate_mcq"),
     # Add other URL patterns as needed
 ]

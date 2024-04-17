@@ -1,17 +1,36 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Input Paragraph</title>
-</head>
-<body>
-    <h1>Input Paragraph</h1>
-    <form action="{% url 'generate_questions' %}" method="post">
-        {% csrf_token %}
-        <textarea name="paragraph" rows="10" cols="50" placeholder="Enter your paragraph here"></textarea>
-        <br>
-        <input type="submit" value="Generate Questions">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Generate Fill-in-the-Blank Questions</title>
+  </head>
+  <body>
+    <h1>Generate Fill-in-the-Blank Questions</h1>
+
+    <form method="post">
+      {% csrf_token %}
+      <label for="paragraph">Enter your paragraph:</label><br />
+      <textarea id="paragraph" name="paragraph" rows="10" cols="50">
+{{ paragraph }}</textarea
+      ><br />
+      <input type="submit" value="Generate Questions" />
     </form>
-</body>
+
+    {% if questions %}
+    <h2>Generated Fill-in-the-Blank Questions:</h2>
+    <ul>
+      {% for question in questions %}
+      <li>{{ question }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    {%if mcq %}
+    {% for mcq in mcq %}
+      <li>{{ mcq }}</li>
+      {% endfor %}
+    {%endif%}
+  </body>
 </html>
+
