@@ -29,58 +29,105 @@ def about(request):
     return render(request, "about.html")
 
 
-# main view to summarize
+# def summarize(request):
+#     if request.method == "POST":
+#         paragraph = request.POST.get("paragraph", "")
+#         max_summary_length = int(request.POST.get("max_summary_length", 100))
+#         word_count = len(paragraph.split())  # Count words in the paragrap
+#         summary = summary_function(paragraph, max_summary_length)
+#         simple_summary = simple_summary_function(paragraph, max_summary_length)
+#         general_summary = general_summary_function(paragraph, max_summary_length)
+#         return JsonResponse(
+#             {
+#                 "summary": summary,
+#                 "general_summary": general_summary,
+#                 "extractive_summary": simple_summary,
+#                 "word_count": word_count,
+#             }
+#         )
+#     return render(request, "text/summarize.html")
+import matplotlib.pyplot as plt
+from rouge import Rouge
+
+import matplotlib.pyplot as plt
+from rouge import Rouge
+
+import matplotlib.pyplot as plt
+from rouge import Rouge
+import io
+import base64
+import matplotlib
+matplotlib.use("Agg")
+
+
 def summarize(request):
     if request.method == "POST":
         paragraph = request.POST.get("paragraph", "")
         max_summary_length = int(request.POST.get("max_summary_length", 100))
-        word_count = len(paragraph.split())  # Count words in the paragrap
+        word_count = len(paragraph.split())  # Count words in the paragraph
         summary = summary_function(paragraph, max_summary_length)
-        rake_summary = summarize_with_rake(paragraph, max_summary_length)
         simple_summary = simple_summary_function(paragraph, max_summary_length)
         general_summary = general_summary_function(paragraph, max_summary_length)
+
+        # Evaluation using Rouge
+        rouge = Rouge()
+        rouge_scores_summary = rouge.get_scores(summary, paragraph)[0]
+        rouge_scores_simple_summary = rouge.get_scores(simple_summary, paragraph)[0]
+        rouge_scores_general_summary = rouge.get_scores(general_summary, paragraph)[0]
+
+        # Calculate average F1 scores
+        avg_rouge_f1_summary = (
+            rouge_scores_summary["rouge-1"]["f"]
+            + rouge_scores_summary["rouge-2"]["f"]
+            + rouge_scores_summary["rouge-l"]["f"]
+        ) / 3
+        avg_rouge_f1_simple_summary = (
+            rouge_scores_simple_summary["rouge-1"]["f"]
+            + rouge_scores_simple_summary["rouge-2"]["f"]
+            + rouge_scores_simple_summary["rouge-l"]["f"]
+        ) / 3
+        avg_rouge_f1_general_summary = (
+            rouge_scores_general_summary["rouge-1"]["f"]
+            + rouge_scores_general_summary["rouge-2"]["f"]
+            + rouge_scores_general_summary["rouge-l"]["f"]
+        ) / 3
+
+        # Plotting
+        labels = ["Summary 3", "Summary 2", "Summary 1"]
+        scores = [
+            avg_rouge_f1_simple_summary,
+            avg_rouge_f1_general_summary,
+            avg_rouge_f1_summary,
+        ]
+
+        plt.bar(labels, scores)
+        plt.xlabel("Summary Type")
+        plt.ylabel("Quality")
+        plt.title("Overall Quality of Summaries")
+        plt.ylim(0, 1)  # Set y-axis limit between 0 and 1
+
+        # Convert plot to image buffer
+        buf = io.BytesIO()
+        plt.savefig(buf, format="png")
+        buf.seek(0)
+        plt.close()
+
+        # Encode the image buffer to base64
+        plot_data = base64.b64encode(buf.read()).decode("utf-8")
+
         return JsonResponse(
             {
                 "summary": summary,
                 "general_summary": general_summary,
                 "extractive_summary": simple_summary,
-                "rake_summary": rake_summary,
                 "word_count": word_count,
+                "avg_rouge_f1_summary": avg_rouge_f1_summary,
+                "avg_rouge_f1_simple_summary": avg_rouge_f1_simple_summary,
+                "avg_rouge_f1_general_summary": avg_rouge_f1_general_summary,
+                "plot_data": plot_data,  # Pass the plot as base64 encoded string
             }
         )
     return render(request, "text/summarize.html")
-
-
-#############################################################################
-# summarization by using rake function                                4
-
-from rake_nltk import Rake
-import re
-
-
-def summarize_with_rake(text, max_summary_length):
-    # Initialize RAKE
-    rake = Rake()
-
-    # Tokenize text into sentences
-    sentences = sent_tokenize(text)
-
-    # Extract keywords and scores from each sentence
-    ranked_phrases = []
-    for sentence in sentences:
-        rake.extract_keywords_from_text(sentence)
-        ranked_phrases.extend(rake.get_ranked_phrases_with_scores())
-
-    # Sort phrases by score in descending order
-    ranked_phrases.sort(key=lambda x: x[0], reverse=True)
-
-    # Generate summary from top-ranked phrases
-    summary = ""
-    num_phrases = min(max_summary_length, len(ranked_phrases))
-    for i in range(num_phrases):
-        summary += ranked_phrases[i][1] + " "
-
-    return summary
 
 
 ###########################################################################
@@ -181,55 +228,6 @@ def summary_function(text, max_summary_length):
     return summary
 
 
-# def get_summary(text, max_summary_length):
-#     # Tokenize sentences
-#     sentences = sent_tokenize(text)
-
-#     # Remove stop words
-#     stop_words = stopwords.words("english")
-
-#     # Calculate TF-IDF (Term Frequency-Inverse Document Frequency)
-#     vectorizer = TfidfVectorizer(stop_words=stop_words)
-#     tfidf_matrix = vectorizer.fit_transform(sentences)
-
-#     # Calculate cosine similarity between sentences
-#     cosine_similarities = cosine_similarity(tfidf_matrix, tfidf_matrix)
-
-#     # Build sentence similarity graph
-#     graph = {}
-#     for i in range(len(sentences)):
-#         graph[i] = []
-#         for j in range(len(sentences)):
-#             if (
-#                 i != j and cosine_similarities[i][j] > 0.2
-#             ):  # Adjust the threshold as needed
-#                 graph[i].append(j)
-
-#     # Rank sentences using PageRank algorithm
-#     scores = {i: 1 for i in range(len(sentences))}
-#     d = 0.85  # Damping factor
-#     for _ in range(10):  # Iterations for convergence
-#         for i in range(len(sentences)):
-#             score = 1 - d
-#             for j in graph:
-#                 if i in graph[j]:
-#                     score += d * (1 / len(graph[j])) * scores[j]
-#             scores[i] = score
-
-#     # Sort sentences by score and select top sentences as summary
-#     ranked_sentences = sorted(
-#         ((scores[i], s) for i, s in enumerate(sentences)), reverse=True
-#     )
-#     summary_length = min(
-#         max_summary_length, len(ranked_sentences)
-#     )  # Choose the number of sentences in the summary
-#     summary = " ".join(
-#         [sentence for score, sentence in ranked_sentences[:summary_length]]
-#     )
-
-#     return summary
-
-
 ###############################################################################
 # using count vectorizer                                                 3
 
@@ -291,8 +289,12 @@ def simple_summary_function(text, max_summary_length):
 
 import json
 
+import matplotlib.pyplot as plt
+from rouge import Rouge
+import io
+import base64
 
-# main view to summarize_pdf
+
 def summarize_pdf(request):
     if request.method == "POST":
         uploaded_file = request.FILES["file"]
@@ -305,17 +307,66 @@ def summarize_pdf(request):
             word_count = len(text.split())
 
             summary = summary_function(text, max_summary_length_pdf)
-            simple_summary = simple_summary_function(
-                text, max_summary_length_pdf
-            )
+            simple_summary = simple_summary_function(text, max_summary_length_pdf)
             general_summary = general_summary_function(text, max_summary_length_pdf)
+
+            # Evaluation using Rouge
+            rouge = Rouge()
+            rouge_scores_summary = rouge.get_scores(summary, text)[0]
+            rouge_scores_simple_summary = rouge.get_scores(simple_summary, text)[0]
+            rouge_scores_general_summary = rouge.get_scores(general_summary, text)[0]
+
+            # Calculate average F1 scores
+            avg_rouge_f1_summary = (
+                rouge_scores_summary["rouge-1"]["f"]
+                + rouge_scores_summary["rouge-2"]["f"]
+                + rouge_scores_summary["rouge-l"]["f"]
+            ) / 3
+            avg_rouge_f1_simple_summary = (
+                rouge_scores_simple_summary["rouge-1"]["f"]
+                + rouge_scores_simple_summary["rouge-2"]["f"]
+                + rouge_scores_simple_summary["rouge-l"]["f"]
+            ) / 3
+            avg_rouge_f1_general_summary = (
+                rouge_scores_general_summary["rouge-1"]["f"]
+                + rouge_scores_general_summary["rouge-2"]["f"]
+                + rouge_scores_general_summary["rouge-l"]["f"]
+            ) / 3
+
+            # Plotting
+            labels = ["Summary 3", "Summary 1", "Summary 2"]
+            scores = [
+                avg_rouge_f1_simple_summary,
+                avg_rouge_f1_general_summary,
+                avg_rouge_f1_summary,
+            ]
+
+            # Convert plot to base64 encoded string
+            plt.bar(labels, scores)
+            plt.xlabel("Summary Type")
+            plt.ylabel("Quality")
+            plt.title("Overall Quality of Summaries")
+            plt.ylim(0, 1)  # Set y-axis limit between 0 and 1
+
+            # Convert plot to image buffer
+            buf = io.BytesIO()
+            plt.savefig(buf, format="png")
+            buf.seek(0)
+            plt.close()
+
+            # Encode the image buffer to base64
+            plot_data = base64.b64encode(buf.read()).decode("utf-8")
+
             return JsonResponse(
                 {
                     "general_summary": general_summary,
                     "summary": summary,
                     "extractive_summary": simple_summary,
-                    # "bert_summary": bert_summary,
                     "word_count": word_count,
+                    "avg_rouge_f1_summary": avg_rouge_f1_summary,
+                    "avg_rouge_f1_simple_summary": avg_rouge_f1_simple_summary,
+                    "avg_rouge_f1_general_summary": avg_rouge_f1_general_summary,
+                    "plot_data": plot_data,  # Pass the plot as base64 encoded string
                 }
             )
         else:
@@ -429,10 +480,6 @@ def extract_text_from_pdf(pdf_file):
 #     summary = " ".join(summary_sentences)
 
 #     return summary
-
-
-
-
 
 
 # from django.shortcuts import render

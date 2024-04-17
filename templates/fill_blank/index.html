@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Paragraph</title>
+</head>
+<body>
+    <h1>Input Paragraph</h1>
+    <form action="{% url 'generate_questions' %}" method="post">
+        {% csrf_token %}
+        <textarea name="paragraph" rows="10" cols="50" placeholder="Enter your paragraph here"></textarea>
+        <br>
+        <input type="submit" value="Generate Questions">
+    </form>
+</body>
+</html>
