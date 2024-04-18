@@ -106,5 +106,7 @@ def index(request):
     return render(
         request,
         "fill_blank/index.html",
-        {"paragraph": paragraph, "questions": questions,"mcq":mcq},
+        {"paragraph": paragraph, "questions": questions},
     )
+
+
