@@ -29,28 +29,6 @@ def about(request):
     return render(request, "about.html")
 
 
-# def summarize(request):
-#     if request.method == "POST":
-#         paragraph = request.POST.get("paragraph", "")
-#         max_summary_length = int(request.POST.get("max_summary_length", 100))
-#         word_count = len(paragraph.split())  # Count words in the paragrap
-#         summary = summary_function(paragraph, max_summary_length)
-#         simple_summary = simple_summary_function(paragraph, max_summary_length)
-#         general_summary = general_summary_function(paragraph, max_summary_length)
-#         return JsonResponse(
-#             {
-#                 "summary": summary,
-#                 "general_summary": general_summary,
-#                 "extractive_summary": simple_summary,
-#                 "word_count": word_count,
-#             }
-#         )
-#     return render(request, "text/summarize.html")
-import matplotlib.pyplot as plt
-from rouge import Rouge
-
-import matplotlib.pyplot as plt
-from rouge import Rouge
 
 import matplotlib.pyplot as plt
 from rouge import Rouge
